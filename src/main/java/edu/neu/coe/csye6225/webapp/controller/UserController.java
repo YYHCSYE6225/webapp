@@ -1,5 +1,6 @@
 package edu.neu.coe.csye6225.webapp.controller;
 
+import edu.neu.coe.csye6225.webapp.exception.UserExistException;
 import edu.neu.coe.csye6225.webapp.entity.User;
 import edu.neu.coe.csye6225.webapp.entity.vo.UserVO;
 import edu.neu.coe.csye6225.webapp.service.UserService;
@@ -19,14 +20,23 @@ public class UserController {
     UserService userService;
     @PostMapping(value = "")
     public ResponseEntity<User> addUser(@RequestBody UserVO userVO){
-        User user=userService.addUser(userVO);
+        if(userVO.getUsername()==null||userVO.getUsername().isEmpty()){
+            return new ResponseEntity<>(null,HttpStatus.BAD_REQUEST);
+        }
+        User user= null;
+        try {
+            user = userService.addUser(userVO);
+        } catch (UserExistException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(null,HttpStatus.BAD_REQUEST);
+        }
         user.setPassword(null);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
     @PutMapping(value = "/self")
     public ResponseEntity updateUser(@RequestBody UserVO user){
-
+        userService.updateUser(user);
         return new ResponseEntity(HttpStatus.OK);
     }
 //
