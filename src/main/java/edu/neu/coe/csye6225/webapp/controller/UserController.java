@@ -3,6 +3,7 @@ package edu.neu.coe.csye6225.webapp.controller;
 import edu.neu.coe.csye6225.webapp.exception.UserExistException;
 import edu.neu.coe.csye6225.webapp.entity.User;
 import edu.neu.coe.csye6225.webapp.entity.vo.UserVO;
+import edu.neu.coe.csye6225.webapp.exception.UsernameException;
 import edu.neu.coe.csye6225.webapp.service.UserService;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
@@ -31,6 +32,9 @@ public class UserController {
         } catch (UserExistException e) {
             e.printStackTrace();
             return new ResponseEntity<>(null,HttpStatus.BAD_REQUEST);
+        } catch (UsernameException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(null,HttpStatus.BAD_REQUEST);
         }
         user.setPassword(null);
         return new ResponseEntity<>(user, HttpStatus.OK);
@@ -41,7 +45,7 @@ public class UserController {
         if(!userService.verifyUsername(request,user.getUsername()))
             return new ResponseEntity(HttpStatus.BAD_REQUEST);
         userService.updateUser(user);
-        return new ResponseEntity(HttpStatus.OK);
+        return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping(value = "self")
