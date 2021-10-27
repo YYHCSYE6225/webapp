@@ -20,27 +20,12 @@ public class FileServiceImpl implements FileService {
     @Value("${aws.s3.bucket}")
     private String bucketName;
 //    private String bucketName="yyh-test-bucket";
-    @Override
-    public boolean verifyFileAsImage(MultipartFile file) {
-        if(file.isEmpty()) {
-            System.out.println("File is null");
-            return false;
-        }
-        String fileName=file.getOriginalFilename();
-        if(!(fileName.endsWith(".jpg")||fileName.endsWith(".png")||fileName.endsWith(".jpeg"))) {
-           System.out.println("Wrong format");
-            return false;
-        }
-        return true;
-    }
 
     @Override
-    public String uploadFile(MultipartFile file,String userId) {
-        File uploadFile=convertMultiPartFileToFile(file);
-        PutObjectRequest putObjectRequest=new PutObjectRequest(bucketName,userId+"/"+file.getOriginalFilename(),uploadFile);
+    public String uploadFile(File file,String userId) {
+        PutObjectRequest putObjectRequest=new PutObjectRequest(bucketName,userId+"/"+file.getName(),file);
         amazonS3.putObject(putObjectRequest);
-        uploadFile.delete();
-        return bucketName+"/"+userId+"/"+file.getOriginalFilename();
+        return bucketName+"/"+userId+"/"+file.getName();
     }
 
     @Override
