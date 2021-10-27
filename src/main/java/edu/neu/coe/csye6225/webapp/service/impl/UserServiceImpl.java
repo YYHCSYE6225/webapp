@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
@@ -77,7 +78,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public FileVO addPic(MultipartFile file,HttpServletRequest request) {
+    public FileVO addPic(File file, HttpServletRequest request) {
         User user=getUserSelf(request);
         String uuid=UUID.randomUUID().toString();
         //get the current date
@@ -85,7 +86,7 @@ public class UserServiceImpl implements UserService {
         String date=dateFormat.format(new Date());
         //upload file
         String url=fileService.uploadFile(file,user.getId());
-        FileVO fileVO=new FileVO(file.getOriginalFilename(),uuid,url,date,user.getId());
+        FileVO fileVO=new FileVO(file.getName(),uuid,url,date,user.getId());
 
         //If the user already have a pic, delete it first and then upload it.
         FileVO verifyFile=fileMapper.getFile(user.getId());

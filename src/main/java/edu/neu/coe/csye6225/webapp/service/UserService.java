@@ -9,13 +9,14 @@ import org.springframework.http.HttpRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
 
 public interface UserService {
     public User addUser(UserVO uservo) throws UserExistException, UsernameException;
     public void updateUser(UserVO userVO);
     public User getUserSelf(HttpServletRequest request);
     public boolean verifyUsername(HttpServletRequest request,String username);
-    public FileVO addPic(MultipartFile file,HttpServletRequest request);
+    public FileVO addPic(File file, HttpServletRequest request);
     public FileVO getPic(HttpServletRequest request);
     public void deletePic(HttpServletRequest request);
 }
