@@ -1,5 +1,9 @@
-package edu.neu.coe.csye6225.webapp.security;
+package edu.neu.coe.csye6225.webapp.config;
 
+import edu.neu.coe.csye6225.webapp.security.CustomAuthenticationProvider;
+import edu.neu.coe.csye6225.webapp.security.JWTAuthenticationFilter;
+import edu.neu.coe.csye6225.webapp.security.JWTLoginFilter;
+import edu.neu.coe.csye6225.webapp.security.MyUserService;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
