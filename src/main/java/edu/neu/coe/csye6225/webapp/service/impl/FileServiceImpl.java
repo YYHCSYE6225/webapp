@@ -17,7 +17,9 @@ public class FileServiceImpl implements FileService {
     @Resource
     private AmazonS3 amazonS3;
 
-    private String bucketName="yyh-test-bucket";
+    @Value("${aws.s3.bucket}")
+    private String bucketName;
+//    private String bucketName="yyh-test-bucket";
     @Override
     public boolean verifyFileAsImage(MultipartFile file) {
         if(file.isEmpty()) {
