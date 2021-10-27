@@ -12,6 +12,7 @@
 
 ### Authentication
 dependencies
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
@@ -22,6 +23,7 @@ use basic authentication
 
 ### AWS service
 dependencies
+
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
