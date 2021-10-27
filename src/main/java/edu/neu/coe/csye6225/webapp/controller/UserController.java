@@ -7,6 +7,7 @@ import edu.neu.coe.csye6225.webapp.entity.vo.UserVO;
 import edu.neu.coe.csye6225.webapp.exception.UsernameException;
 import edu.neu.coe.csye6225.webapp.service.FileService;
 import edu.neu.coe.csye6225.webapp.service.UserService;
+import org.apache.commons.io.FileUtils;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * @author Yuhan Yang
@@ -60,8 +64,15 @@ public class UserController {
     }
 
     @PostMapping(value = "/self/pic")
-    public ResponseEntity<FileVO> addPic(@RequestBody MultipartFile file,HttpServletRequest request) {
-        if(!fileService.verifyFileAsImage(file))
+    public ResponseEntity<FileVO> addPic(HttpServletRequest request) {
+        File file=new File("Pic.jpg");
+        try {
+            InputStream inputStream=request.getInputStream();
+            FileUtils.copyInputStreamToFile(inputStream, file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if(file==null)
             return new ResponseEntity<>(null,HttpStatus.BAD_REQUEST);
         FileVO fileVO=userService.addPic(file,request);
         return new ResponseEntity<FileVO>(fileVO,HttpStatus.CREATED);
