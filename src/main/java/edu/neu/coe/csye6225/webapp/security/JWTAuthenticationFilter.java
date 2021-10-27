@@ -19,9 +19,9 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
-        String token=request.getHeader("token");
-        if(token!=null&&token.startsWith("Yuhan ")){
-            String authToken=token.replace("Yuhan ","");
+        String token=request.getHeader("Authorization");
+        if(token!=null&&token.startsWith("Basic ")){
+            String authToken=token.replace("Basic ","");
             String preToken= new String(Base64.getDecoder().decode(authToken));
             if(preToken==null)
                 System.out.println("token is null");
