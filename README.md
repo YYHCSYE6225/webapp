@@ -29,3 +29,6 @@ dependencies
             <artifactId>aws-java-sdk-s3</artifactId>
             <version>1.11.821</version>
         </dependency>
+
+### RDS init
+using init.sql to initialize the database tables. using .properties file to config
