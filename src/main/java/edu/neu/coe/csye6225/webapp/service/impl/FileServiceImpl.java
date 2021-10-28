@@ -2,6 +2,7 @@ package edu.neu.coe.csye6225.webapp.service.impl;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.PutObjectResult;
 import edu.neu.coe.csye6225.webapp.service.FileService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,7 @@ public class FileServiceImpl implements FileService {
 
     @Value("${aws.s3.bucket}")
     private String bucketName;
-//    private String bucketName="yyh-test-bucket";
+//    private String bucketName="yyh-newtest-bucket";
 
     @Override
     public String uploadFile(File file,String userId) {
