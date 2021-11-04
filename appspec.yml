@@ -1,0 +1,14 @@
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /var/webapp
+hooks:
+  BeforeInstall:
+    - location: scripts/beforeInstall.sh
+      timeout: 180
+      runas: root
+  ApplicationStart:
+    - location: scripts/applicationStart.sh
+      timeout: 180
+      runas: root
