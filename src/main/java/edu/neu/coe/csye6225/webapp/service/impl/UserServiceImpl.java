@@ -95,6 +95,7 @@ public class UserServiceImpl implements UserService {
         }
         else {
             deletePic(request);
+            fileService.uploadFile(file,user.getId());
             fileMapper.uploadFile(fileVO);
         }
         return fileVO;
