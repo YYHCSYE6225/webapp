@@ -24,7 +24,7 @@ import java.io.InputStream;
  * @author Yuhan Yang
  */
 @RestController
-@RequestMapping("/v1/user")
+@RequestMapping("/v2/user")
 public class UserController {
     @Resource
     UserService userService;
