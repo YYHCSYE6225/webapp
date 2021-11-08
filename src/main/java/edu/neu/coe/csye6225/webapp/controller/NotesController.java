@@ -13,6 +13,6 @@ import javax.servlet.http.HttpServletRequest;
 public class NotesController {
     @GetMapping(value = "")
     public String getUser(){
-        return "cicd";
+        return "v2";
     }
 }
