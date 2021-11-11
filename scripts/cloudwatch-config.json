@@ -22,8 +22,7 @@
           {
             "file_path": "/opt/tomcat/logs/csye6225.log",
             "log_group_name": "csye6225",
-            "log_stream_name": "webapp",
-            "timezone ":"UTC"
+            "log_stream_name": "webapp"
           }
         ]
       }
