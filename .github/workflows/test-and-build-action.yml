@@ -21,7 +21,7 @@ jobs:
         run: mvn --batch-mode --update-snapshots verify
 
       - name: Build Deployment Artifact
-        run: zip -r webapp.zip target/webapp-0.0.1-SNAPSHOT.jar scripts/*.sh appspec.yml
+        run: zip -r webapp.zip target/webapp-0.0.1-SNAPSHOT.jar scripts/* appspec.yml
 
       - name: Set up aws credentials
         uses: aws-actions/configure-aws-credentials@v1
