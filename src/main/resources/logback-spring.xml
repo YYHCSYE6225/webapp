@@ -38,10 +38,4 @@
 
     <!-- project default level -->
     <logger name="edu.neu.coe.csye6225.webapp.controller.UserController" level="INFO" />
-
-    <!-- 日志输出级别 -->
-    <root level="INFO">
-        <appender-ref ref="console" />
-        <appender-ref ref="fileLog" />
-    </root>
 </configuration>

@@ -67,7 +67,7 @@ public class UserController {
     @GetMapping(value = "/self")
     public ResponseEntity<User> getUser(HttpServletRequest request){
         User user=userService.getUserSelf(request);
-        logger.info(String.valueOf(HttpStatus.OK),user);
+        logger.info(new ResponseEntity(user,HttpStatus.OK).toString());
         return new ResponseEntity(user,HttpStatus.OK);
     }
 
