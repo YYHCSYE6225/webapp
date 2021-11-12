@@ -8,6 +8,8 @@ import edu.neu.coe.csye6225.webapp.exception.UsernameException;
 import edu.neu.coe.csye6225.webapp.service.FileService;
 import edu.neu.coe.csye6225.webapp.service.UserService;
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +28,7 @@ import java.io.InputStream;
 @RestController
 @RequestMapping("/v1/user")
 public class UserController {
+    private static Logger logger= LoggerFactory.getLogger(UserController.class);
     @Resource
     UserService userService;
     @Resource
@@ -40,12 +43,15 @@ public class UserController {
             user = userService.addUser(userVO);
         } catch (UserExistException e) {
             e.printStackTrace();
+            logger.warn(new ResponseEntity<>(null,HttpStatus.BAD_REQUEST).toString());
             return new ResponseEntity<>(null,HttpStatus.BAD_REQUEST);
         } catch (UsernameException e) {
             e.printStackTrace();
+            logger.warn(new ResponseEntity<>(null,HttpStatus.BAD_REQUEST).toString());
             return new ResponseEntity<>(null,HttpStatus.BAD_REQUEST);
         }
         user.setPassword(null);
+        logger.info(new ResponseEntity<>(user, HttpStatus.OK).toString());
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
@@ -54,13 +60,14 @@ public class UserController {
         if(!userService.verifyUsername(request,user.getUsername()))
             return new ResponseEntity(HttpStatus.BAD_REQUEST);
         userService.updateUser(user);
+        logger.info(new ResponseEntity(HttpStatus.NO_CONTENT).toString());
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping(value = "/self")
     public ResponseEntity<User> getUser(HttpServletRequest request){
         User user=userService.getUserSelf(request);
-
+        logger.info(new ResponseEntity(user,HttpStatus.OK).toString());
         return new ResponseEntity(user,HttpStatus.OK);
     }
 
@@ -76,6 +83,7 @@ public class UserController {
         if(file==null)
             return new ResponseEntity<>(null,HttpStatus.BAD_REQUEST);
         FileVO fileVO=userService.addPic(file,request);
+        logger.info(new ResponseEntity<FileVO>(fileVO,HttpStatus.CREATED).toString());
         return new ResponseEntity<FileVO>(fileVO,HttpStatus.CREATED);
     }
 
@@ -83,8 +91,10 @@ public class UserController {
     public ResponseEntity<FileVO> getPic(HttpServletRequest request){
         FileVO fileVO=userService.getPic(request);
         if(fileVO==null){
+            logger.warn(new ResponseEntity<>(null,HttpStatus.NOT_FOUND).toString());
             return new ResponseEntity<>(null,HttpStatus.NOT_FOUND);
         }
+        logger.info(new ResponseEntity<FileVO>(fileVO,HttpStatus.OK).toString());
         return new ResponseEntity<FileVO>(fileVO,HttpStatus.OK);
     }
 
@@ -92,9 +102,11 @@ public class UserController {
     public ResponseEntity deletePic(HttpServletRequest request){
         FileVO fileVO=userService.getPic(request);
         if (fileVO==null){
+            logger.warn(new ResponseEntity(null,HttpStatus.NOT_FOUND).toString());
             return new ResponseEntity(null,HttpStatus.NOT_FOUND);
         }
         userService.deletePic(request);
+        logger.info(new ResponseEntity(null,HttpStatus.NO_CONTENT).toString());
         return new ResponseEntity(null,HttpStatus.NO_CONTENT);
     }
 
