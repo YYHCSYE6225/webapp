@@ -6,13 +6,7 @@
   "metrics":{
     "metrics_collected":{
       "collectd":{},
-      "mem": {
-        "measurement": [
-          "used_percent",
-          "total"
-        ]
-      }
-
+      "statsd": {}
     }
   },
   "logs": {

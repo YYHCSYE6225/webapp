@@ -1,5 +1,7 @@
 package edu.neu.coe.csye6225.webapp.controller;
 
+import com.timgroup.statsd.NonBlockingStatsDClient;
+import com.timgroup.statsd.StatsDClient;
 import edu.neu.coe.csye6225.webapp.entity.vo.FileVO;
 import edu.neu.coe.csye6225.webapp.exception.UserExistException;
 import edu.neu.coe.csye6225.webapp.entity.User;
@@ -29,6 +31,7 @@ import java.io.InputStream;
 @RequestMapping("/v1/user")
 public class UserController {
     private static Logger logger= LoggerFactory.getLogger(UserController.class);
+    private static final StatsDClient statsd = new NonBlockingStatsDClient("my.prefix", "statsd-host", 8125);
     @Resource
     UserService userService;
     @Resource
@@ -66,6 +69,7 @@ public class UserController {
 
     @GetMapping(value = "/self")
     public ResponseEntity<User> getUser(HttpServletRequest request){
+        statsd.incrementCounter("TotalRequestCount");
         User user=userService.getUserSelf(request);
         logger.info(new ResponseEntity(user,HttpStatus.OK).toString());
         return new ResponseEntity(user,HttpStatus.OK);
