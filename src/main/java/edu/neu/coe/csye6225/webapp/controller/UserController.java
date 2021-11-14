@@ -31,7 +31,7 @@ import java.io.InputStream;
 @RequestMapping("/v1/user")
 public class UserController {
     private static Logger logger= LoggerFactory.getLogger(UserController.class);
-    private static final StatsDClient statsd = new NonBlockingStatsDClient("my.prefix", "statsd-host", 8125);
+    private static final StatsDClient statsd = new NonBlockingStatsDClient("", "127.0.0.1", 8125);
     @Resource
     UserService userService;
     @Resource
