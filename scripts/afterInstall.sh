@@ -1,3 +1,4 @@
+sudo nohup node /home/ubuntu/statsd/stats.js /home/ubuntu/statsd/config.js &
 sudo cp /var/webapp/scripts/cloudwatch-config.json /opt/
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
     -a fetch-config \
