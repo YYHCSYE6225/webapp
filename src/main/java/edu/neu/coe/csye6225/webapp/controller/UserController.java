@@ -39,7 +39,9 @@ public class UserController {
     @PostMapping(value = "")
     public ResponseEntity<User> addUser(@RequestBody UserVO userVO){
         statsd.incrementCounter("TotalCreateUserCount");
+        long startTime = System.currentTimeMillis();
         if(userVO.getUsername()==null||userVO.getUsername().isEmpty()){
+            statsd.recordExecutionTime("CreateUser",System.currentTimeMillis()-startTime);
             return new ResponseEntity<>(null,HttpStatus.BAD_REQUEST);
         }
         User user= null;
@@ -48,13 +50,16 @@ public class UserController {
         } catch (UserExistException e) {
             e.printStackTrace();
             logger.warn(new ResponseEntity<>(null,HttpStatus.BAD_REQUEST).toString());
+            statsd.recordExecutionTime("CreateUser",System.currentTimeMillis()-startTime);
             return new ResponseEntity<>(null,HttpStatus.BAD_REQUEST);
         } catch (UsernameException e) {
             e.printStackTrace();
             logger.warn(new ResponseEntity<>(null,HttpStatus.BAD_REQUEST).toString());
+            statsd.recordExecutionTime("CreateUser",System.currentTimeMillis()-startTime);
             return new ResponseEntity<>(null,HttpStatus.BAD_REQUEST);
         }
         user.setPassword(null);
+        statsd.recordExecutionTime("CreateUser",System.currentTimeMillis()-startTime);
         logger.info(new ResponseEntity<>(user, HttpStatus.OK).toString());
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
@@ -62,24 +67,31 @@ public class UserController {
     @PutMapping(value = "/self")
     public ResponseEntity updateUser(@RequestBody UserVO user,HttpServletRequest request){
         statsd.incrementCounter("TotalUpdateUserCount");
-        if(!userService.verifyUsername(request,user.getUsername()))
+        long startTime=System.currentTimeMillis();
+        if(!userService.verifyUsername(request,user.getUsername())){
+            statsd.recordExecutionTime("UpdateUser",System.currentTimeMillis()-startTime);
             return new ResponseEntity(HttpStatus.BAD_REQUEST);
+        }
         userService.updateUser(user);
         logger.info(new ResponseEntity(HttpStatus.NO_CONTENT).toString());
+        statsd.recordExecutionTime("UpdateUser",System.currentTimeMillis()-startTime);
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping(value = "/self")
     public ResponseEntity<User> getUser(HttpServletRequest request){
         statsd.incrementCounter("TotalGetUserCount");
+        long startTime=System.currentTimeMillis();
         User user=userService.getUserSelf(request);
         logger.info(new ResponseEntity(user,HttpStatus.OK).toString());
+        statsd.recordExecutionTime("GetUser",System.currentTimeMillis()-startTime);
         return new ResponseEntity(user,HttpStatus.OK);
     }
 
     @PostMapping(value = "/self/pic")
     public ResponseEntity<FileVO> addPic(HttpServletRequest request) {
         statsd.incrementCounter("TotalUploadPicCount");
+        long startTime=System.currentTimeMillis();
         File file=new File("Pic.jpg");
         try {
             InputStream inputStream=request.getInputStream();
@@ -87,35 +99,44 @@ public class UserController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if(file==null)
-            return new ResponseEntity<>(null,HttpStatus.BAD_REQUEST);
+        if(file==null) {
+            statsd.recordExecutionTime("UploadUserPic",System.currentTimeMillis()-startTime);
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
         FileVO fileVO=userService.addPic(file,request);
         logger.info(new ResponseEntity<FileVO>(fileVO,HttpStatus.CREATED).toString());
+        statsd.recordExecutionTime("UploadUserPic",System.currentTimeMillis()-startTime);
         return new ResponseEntity<FileVO>(fileVO,HttpStatus.CREATED);
     }
 
     @GetMapping(value = "/self/pic")
     public ResponseEntity<FileVO> getPic(HttpServletRequest request){
         statsd.incrementCounter("TotalGetPicCount");
+        long startTime=System.currentTimeMillis();
         FileVO fileVO=userService.getPic(request);
         if(fileVO==null){
             logger.warn(new ResponseEntity<>(null,HttpStatus.NOT_FOUND).toString());
+            statsd.recordExecutionTime("GetUserPic",System.currentTimeMillis()-startTime);
             return new ResponseEntity<>(null,HttpStatus.NOT_FOUND);
         }
         logger.info(new ResponseEntity<FileVO>(fileVO,HttpStatus.OK).toString());
+        statsd.recordExecutionTime("GetUserPic",System.currentTimeMillis()-startTime);
         return new ResponseEntity<FileVO>(fileVO,HttpStatus.OK);
     }
 
     @DeleteMapping(value = "/self/pic")
     public ResponseEntity deletePic(HttpServletRequest request){
         statsd.incrementCounter("TotalDeletePicCount");
+        long startTime=System.currentTimeMillis();
         FileVO fileVO=userService.getPic(request);
         if (fileVO==null){
             logger.warn(new ResponseEntity(null,HttpStatus.NOT_FOUND).toString());
+            statsd.recordExecutionTime("DeleteUserPic",System.currentTimeMillis()-startTime);
             return new ResponseEntity(null,HttpStatus.NOT_FOUND);
         }
         userService.deletePic(request);
         logger.info(new ResponseEntity(null,HttpStatus.NO_CONTENT).toString());
+        statsd.recordExecutionTime("DeleteUserPic",System.currentTimeMillis()-startTime);
         return new ResponseEntity(null,HttpStatus.NO_CONTENT);
     }
 
