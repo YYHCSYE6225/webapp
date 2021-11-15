@@ -38,6 +38,7 @@ public class UserController {
     FileService fileService;
     @PostMapping(value = "")
     public ResponseEntity<User> addUser(@RequestBody UserVO userVO){
+        statsd.incrementCounter("TotalCreateUserCount");
         if(userVO.getUsername()==null||userVO.getUsername().isEmpty()){
             return new ResponseEntity<>(null,HttpStatus.BAD_REQUEST);
         }
@@ -60,6 +61,7 @@ public class UserController {
 
     @PutMapping(value = "/self")
     public ResponseEntity updateUser(@RequestBody UserVO user,HttpServletRequest request){
+        statsd.incrementCounter("TotalUpdateUserCount");
         if(!userService.verifyUsername(request,user.getUsername()))
             return new ResponseEntity(HttpStatus.BAD_REQUEST);
         userService.updateUser(user);
@@ -69,7 +71,7 @@ public class UserController {
 
     @GetMapping(value = "/self")
     public ResponseEntity<User> getUser(HttpServletRequest request){
-        statsd.incrementCounter("TotalRequestCount");
+        statsd.incrementCounter("TotalGetUserCount");
         User user=userService.getUserSelf(request);
         logger.info(new ResponseEntity(user,HttpStatus.OK).toString());
         return new ResponseEntity(user,HttpStatus.OK);
@@ -77,6 +79,7 @@ public class UserController {
 
     @PostMapping(value = "/self/pic")
     public ResponseEntity<FileVO> addPic(HttpServletRequest request) {
+        statsd.incrementCounter("TotalUploadPicCount");
         File file=new File("Pic.jpg");
         try {
             InputStream inputStream=request.getInputStream();
@@ -93,6 +96,7 @@ public class UserController {
 
     @GetMapping(value = "/self/pic")
     public ResponseEntity<FileVO> getPic(HttpServletRequest request){
+        statsd.incrementCounter("TotalGetPicCount");
         FileVO fileVO=userService.getPic(request);
         if(fileVO==null){
             logger.warn(new ResponseEntity<>(null,HttpStatus.NOT_FOUND).toString());
@@ -104,6 +108,7 @@ public class UserController {
 
     @DeleteMapping(value = "/self/pic")
     public ResponseEntity deletePic(HttpServletRequest request){
+        statsd.incrementCounter("TotalDeletePicCount");
         FileVO fileVO=userService.getPic(request);
         if (fileVO==null){
             logger.warn(new ResponseEntity(null,HttpStatus.NOT_FOUND).toString());
