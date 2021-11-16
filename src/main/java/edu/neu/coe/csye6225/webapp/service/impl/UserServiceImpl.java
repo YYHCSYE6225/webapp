@@ -1,5 +1,7 @@
 package edu.neu.coe.csye6225.webapp.service.impl;
 
+import com.timgroup.statsd.NonBlockingStatsDClient;
+import com.timgroup.statsd.StatsDClient;
 import edu.neu.coe.csye6225.webapp.dao.FileMapper;
 import edu.neu.coe.csye6225.webapp.entity.vo.FileVO;
 import edu.neu.coe.csye6225.webapp.exception.UserExistException;
@@ -26,6 +28,7 @@ import java.util.regex.Pattern;
 
 @Service
 public class UserServiceImpl implements UserService {
+    private static final StatsDClient statsd = new NonBlockingStatsDClient("", "127.0.0.1", 8125);
     @Resource
     private UserMapper userMapper;
     @Resource
@@ -40,7 +43,9 @@ public class UserServiceImpl implements UserService {
         if(!m.matches()){
             throw new UsernameException();
         }
+        long getUserStartTime=System.currentTimeMillis();
         User user=userMapper.getUserByUsername(userVO.getUsername());
+        statsd.recordExecutionTime("SQLGetUserByUsername",System.currentTimeMillis()-getUserStartTime);
         if(user!=null)
             throw new UserExistException();
         else {
@@ -51,8 +56,12 @@ public class UserServiceImpl implements UserService {
         user.setUsername(userVO.getUsername());
         user.setFirstName(userVO.getFirstName());
         user.setLastName(userVO.getLastName());
+        long addStartTime=System.currentTimeMillis();
         userMapper.addUser(user);
+        statsd.recordExecutionTime("SQLAddUser",System.currentTimeMillis()-addStartTime);
+        long getStartTime=System.currentTimeMillis();
         user=userMapper.getUserById(uuid);
+        statsd.recordExecutionTime("SQLGetUserById",System.currentTimeMillis()-getStartTime);
         return user;
         }
     }
@@ -60,13 +69,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateUser(UserVO userVO) {
         userVO.setPassword(EncodeUtil.encode(userVO.getPassword()));
+        long startTime=System.currentTimeMillis();
         userMapper.updateUser(userVO);
+        statsd.recordExecutionTime("SQLUpdateUser",System.currentTimeMillis()-startTime);
     }
 
     @Override
     public User getUserSelf(HttpServletRequest request) {
         String username=getUsernameFromRequest(request);
+        long startTime=System.currentTimeMillis();
         User user=userMapper.getUserByUsername(username);
+        statsd.recordExecutionTime("SQLGetUserByUsername",System.currentTimeMillis()-startTime);
         user.setPassword(null);
         return user;
     }
@@ -89,14 +102,20 @@ public class UserServiceImpl implements UserService {
         FileVO fileVO=new FileVO(file.getName(),uuid,url,date,user.getId());
 
         //If the user already have a pic, delete it first and then upload it.
+        long getStartTime=System.currentTimeMillis();
         FileVO verifyFile=fileMapper.getFile(user.getId());
+        statsd.recordExecutionTime("SQLGetFile",System.currentTimeMillis()-getStartTime);
         if(verifyFile==null) {
+            long upload=System.currentTimeMillis();
             fileMapper.uploadFile(fileVO);
+            statsd.recordExecutionTime("SQLUploadFile",System.currentTimeMillis()-upload);
         }
         else {
             deletePic(request);
             fileService.uploadFile(file,user.getId());
+            long upload1=System.currentTimeMillis();
             fileMapper.uploadFile(fileVO);
+            statsd.recordExecutionTime("SQLUploadFile",System.currentTimeMillis()-upload1);
         }
         return fileVO;
     }
@@ -112,14 +131,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public FileVO getPic(HttpServletRequest request){
         User user=getUserSelf(request);
+        long startTime=System.currentTimeMillis();
         FileVO fileVO=fileMapper.getFile(user.getId());
+        statsd.recordExecutionTime("SQLGetFile",System.currentTimeMillis()-startTime);
         return fileVO;
     }
     @Override
     public void deletePic(HttpServletRequest request){
         User user=getUserSelf(request);
         FileVO fileVO=getPic(request);
+        long startTime=System.currentTimeMillis();
         fileMapper.deleteFile(user.getId());
+        statsd.recordExecutionTime("SQLDeleteFile",System.currentTimeMillis()-startTime);
         fileService.deleteFile(user.getId()+"/"+fileVO.getFileName());
     }
 
