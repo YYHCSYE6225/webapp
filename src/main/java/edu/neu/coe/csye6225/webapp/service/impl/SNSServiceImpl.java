@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class SNSServiceImpl implements SNSService {
-    private String snsTopicARN="arn:aws:sns:us-east-1:254269847591:testTopic";
+    private String snsTopicARN="arn:aws:sns:us-east-1:254269847591:email-verification-topic";
     private String accessKeyId="AKIATWM5J7ATTTV7DDQ3";
     private String secretAccessKey="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";
 
