@@ -19,4 +19,6 @@ public interface UserService {
     public FileVO addPic(File file, HttpServletRequest request);
     public FileVO getPic(HttpServletRequest request);
     public void deletePic(HttpServletRequest request);
+    public Boolean verifyUserEmail(String username,String token);
+    public Boolean checkVerify(HttpServletRequest request);
 }

@@ -66,6 +66,8 @@ public class UserController {
 
     @PutMapping(value = "/self")
     public ResponseEntity updateUser(@RequestBody UserVO user,HttpServletRequest request){
+        if(!userService.checkVerify(request))
+            return new ResponseEntity(null, HttpStatus.FORBIDDEN);
         statsd.incrementCounter("TotalUpdateUserCount");
         long startTime=System.currentTimeMillis();
         if(!userService.verifyUsername(request,user.getUsername())){
@@ -80,6 +82,8 @@ public class UserController {
 
     @GetMapping(value = "/self")
     public ResponseEntity<User> getUser(HttpServletRequest request){
+        if(!userService.checkVerify(request))
+            return new ResponseEntity(null, HttpStatus.FORBIDDEN);
         statsd.incrementCounter("TotalGetUserCount");
         long startTime=System.currentTimeMillis();
         User user=userService.getUserSelf(request);
@@ -90,6 +94,8 @@ public class UserController {
 
     @PostMapping(value = "/self/pic")
     public ResponseEntity<FileVO> addPic(HttpServletRequest request) {
+        if(!userService.checkVerify(request))
+            return new ResponseEntity(null, HttpStatus.FORBIDDEN);
         statsd.incrementCounter("TotalUploadPicCount");
         long startTime=System.currentTimeMillis();
         File file=new File("Pic.jpg");
@@ -111,6 +117,8 @@ public class UserController {
 
     @GetMapping(value = "/self/pic")
     public ResponseEntity<FileVO> getPic(HttpServletRequest request){
+        if(!userService.checkVerify(request))
+            return new ResponseEntity(null, HttpStatus.FORBIDDEN);
         statsd.incrementCounter("TotalGetPicCount");
         long startTime=System.currentTimeMillis();
         FileVO fileVO=userService.getPic(request);
@@ -126,6 +134,8 @@ public class UserController {
 
     @DeleteMapping(value = "/self/pic")
     public ResponseEntity deletePic(HttpServletRequest request){
+        if(!userService.checkVerify(request))
+            return new ResponseEntity(null, HttpStatus.FORBIDDEN);
         statsd.incrementCounter("TotalDeletePicCount");
         long startTime=System.currentTimeMillis();
         FileVO fileVO=userService.getPic(request);
@@ -138,6 +148,14 @@ public class UserController {
         logger.info(new ResponseEntity(null,HttpStatus.NO_CONTENT).toString());
         statsd.recordExecutionTime("DeleteUserPic",System.currentTimeMillis()-startTime);
         return new ResponseEntity(null,HttpStatus.NO_CONTENT);
+    }
+
+    @GetMapping(value="/verifyUserEmail/{email}/{token}")
+    public ResponseEntity verifyUserEmail(@PathVariable String email,@PathVariable String token){
+        if(userService.verifyUserEmail(email,token)){
+            return new ResponseEntity(null,HttpStatus.OK);
+        }
+        return new ResponseEntity(null,HttpStatus.BAD_REQUEST);
     }
 
 }

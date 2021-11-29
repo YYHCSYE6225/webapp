@@ -21,4 +21,7 @@ public class User {
     LocalDateTime accountCreated;
     @ReadOnlyProperty
     LocalDateTime accountUpdated;
+    Boolean verified;
+    @ReadOnlyProperty
+    LocalDateTime verifiedOn;
 }

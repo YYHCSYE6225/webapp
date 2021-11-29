@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 @Mapper
 @Component
 public interface UserMapper {
-    @Insert("INSERT INTO user(id,first_name,last_name,password,username)VALUES (#{id},#{firstName},#{lastName}" +
-            ",#{password},#{username})")
+    @Insert("INSERT INTO user(id,first_name,last_name,password,username,verified)VALUES (#{id},#{firstName},#{lastName}" +
+            ",#{password},#{username},#{verified})")
     public void addUser(User user);
 
     @Results({
@@ -20,7 +20,9 @@ public interface UserMapper {
             @Result(property = "password", column = "password"),
             @Result(property = "username", column = "username"),
             @Result(property = "accountCreated", column = "account_created"),
-            @Result(property = "accountUpdated", column = "account_updated")
+            @Result(property = "accountUpdated", column = "account_updated"),
+            @Result(property = "verified", column = "verified"),
+            @Result(property = "verifiedOn", column = "verified_on")
     })
     @Select("SELECT * from user WHERE id=#{id}")
     public User getUserById(String uuid);
@@ -32,7 +34,9 @@ public interface UserMapper {
             @Result(property = "password", column = "password"),
             @Result(property = "username", column = "username"),
             @Result(property = "accountCreated", column = "account_created"),
-            @Result(property = "accountUpdated", column = "account_updated")
+            @Result(property = "accountUpdated", column = "account_updated"),
+            @Result(property = "verified", column = "verified"),
+            @Result(property = "verifiedOn", column = "verified_on")
     })
     @Select("SELECT * from user WHERE username=#{username}")
     public User getUserByUsername(String username);
@@ -46,4 +50,7 @@ public interface UserMapper {
 
     @Update("UPDATE user SET first_name=#{firstName}, last_name=#{lastName}, password=#{password} WHERE username=#{username}")
     public void updateUser(UserVO userVO);
+
+    @Update("UPDATE user SET verified=true, verified_on=DATE_FORMAT(NOW(),'%Y-%m-%d %H:%m:%s') WHERE username=#{username}")
+    public void verifyUser(String username);
 }
