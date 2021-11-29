@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS `user`  (
                          `username` varchar(255) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL,
                          `account_created` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP,
                          `account_updated` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP(0),
+                         `verified_on` datetime(0) NULL DEFAULT NULL,
+                         `verified` int(255) NULL DEFAULT NULL,
                          PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = latin1 COLLATE = latin1_swedish_ci ROW_FORMAT = Dynamic;
 

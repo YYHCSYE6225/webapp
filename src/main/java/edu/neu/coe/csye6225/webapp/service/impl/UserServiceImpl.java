@@ -1,8 +1,10 @@
 package edu.neu.coe.csye6225.webapp.service.impl;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
 import edu.neu.coe.csye6225.webapp.dao.FileMapper;
+import edu.neu.coe.csye6225.webapp.entity.Token;
 import edu.neu.coe.csye6225.webapp.entity.vo.FileVO;
 import edu.neu.coe.csye6225.webapp.exception.UserExistException;
 import edu.neu.coe.csye6225.webapp.dao.UserMapper;
@@ -11,7 +13,9 @@ import edu.neu.coe.csye6225.webapp.entity.vo.UserVO;
 import edu.neu.coe.csye6225.webapp.exception.UsernameException;
 import edu.neu.coe.csye6225.webapp.security.EncodeUtil;
 import edu.neu.coe.csye6225.webapp.service.FileService;
+import edu.neu.coe.csye6225.webapp.service.SNSService;
 import edu.neu.coe.csye6225.webapp.service.UserService;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,8 +39,13 @@ public class UserServiceImpl implements UserService {
     private FileService fileService;
     @Resource
     private FileMapper fileMapper;
+    @Resource
+    private DynamoDBMapper dynamoDBMapper;
+    @Resource
+    private SNSService snsService;
     @Override
     public User addUser(UserVO userVO) throws UserExistException, UsernameException {
+        //verify it is an email address
         String str="^([a-zA-Z0-9]*[-_]?[a-zA-Z0-9]+)*@([a-zA-Z0-9]*[-_]?[a-zA-Z0-9]+)+[\\.][A-Za-z]{2,3}([\\.][A-Za-z]{2})?$";
         Pattern p = Pattern.compile(str);
         Matcher m = p.matcher(userVO.getUsername());
@@ -56,12 +65,26 @@ public class UserServiceImpl implements UserService {
         user.setUsername(userVO.getUsername());
         user.setFirstName(userVO.getFirstName());
         user.setLastName(userVO.getLastName());
+        user.setVerified(false);
         long addStartTime=System.currentTimeMillis();
         userMapper.addUser(user);
         statsd.recordExecutionTime("SQLAddUser",System.currentTimeMillis()-addStartTime);
         long getStartTime=System.currentTimeMillis();
         user=userMapper.getUserById(uuid);
         statsd.recordExecutionTime("SQLGetUserById",System.currentTimeMillis()-getStartTime);
+        //generate one-time token and store in the amazon db
+            Token token=new Token();
+            token.setUsername(user.getUsername());
+            token.setToken(user.getId());
+            Date now=new Date();
+            Date ttl=new Date(now.getTime()+300000);
+            token.setTtl(ttl.getTime());
+            dynamoDBMapper.save(token);
+
+        //invoke sns service to send email to the user
+            String message="email_"+user.getUsername()+"_token_"+user.getId();
+            snsService.publishMessage(message);
+
         return user;
         }
     }
@@ -144,6 +167,22 @@ public class UserServiceImpl implements UserService {
         fileMapper.deleteFile(user.getId());
         statsd.recordExecutionTime("SQLDeleteFile",System.currentTimeMillis()-startTime);
         fileService.deleteFile(user.getId()+"/"+fileVO.getFileName());
+    }
+
+    @Override
+    public Boolean verifyUserEmail(String username, String token) {
+        Token tokenEntity=dynamoDBMapper.load(Token.class,username);
+        if(token.equals(tokenEntity.getToken())){
+            userMapper.verifyUser(username);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public Boolean checkVerify(HttpServletRequest request) {
+        User user=getUserSelf(request);
+        return user.getVerified();
     }
 
 }
