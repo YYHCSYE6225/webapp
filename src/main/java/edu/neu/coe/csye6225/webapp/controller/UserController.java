@@ -34,8 +34,6 @@ public class UserController {
     private static final StatsDClient statsd = new NonBlockingStatsDClient("", "127.0.0.1", 8125);
     @Resource
     UserService userService;
-    @Resource
-    FileService fileService;
     @PostMapping(value = "")
     public ResponseEntity<User> addUser(@RequestBody UserVO userVO){
         statsd.incrementCounter("TotalCreateUserCount");

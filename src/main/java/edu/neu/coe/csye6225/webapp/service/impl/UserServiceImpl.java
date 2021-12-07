@@ -4,6 +4,10 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
 import edu.neu.coe.csye6225.webapp.dao.FileMapper;
+import edu.neu.coe.csye6225.webapp.dao.primary.PrimaryFileMapper;
+import edu.neu.coe.csye6225.webapp.dao.primary.PrimaryUserMapper;
+import edu.neu.coe.csye6225.webapp.dao.secondary.SecondaryFileMapper;
+import edu.neu.coe.csye6225.webapp.dao.secondary.SecondaryUserMapper;
 import edu.neu.coe.csye6225.webapp.entity.Token;
 import edu.neu.coe.csye6225.webapp.entity.vo.FileVO;
 import edu.neu.coe.csye6225.webapp.exception.UserExistException;
@@ -15,6 +19,7 @@ import edu.neu.coe.csye6225.webapp.security.EncodeUtil;
 import edu.neu.coe.csye6225.webapp.service.FileService;
 import edu.neu.coe.csye6225.webapp.service.SNSService;
 import edu.neu.coe.csye6225.webapp.service.UserService;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Service;
@@ -34,11 +39,15 @@ import java.util.regex.Pattern;
 public class UserServiceImpl implements UserService {
     private static final StatsDClient statsd = new NonBlockingStatsDClient("", "127.0.0.1", 8125);
     @Resource
-    private UserMapper userMapper;
+    private PrimaryUserMapper userMapper1;
+    @Resource
+    private SecondaryUserMapper userMapper2;
     @Resource
     private FileService fileService;
     @Resource
-    private FileMapper fileMapper;
+    private PrimaryFileMapper fileMapper1;
+    @Resource
+    private SecondaryFileMapper fileMapper2;
     @Resource
     private DynamoDBMapper dynamoDBMapper;
     @Resource
@@ -53,7 +62,7 @@ public class UserServiceImpl implements UserService {
             throw new UsernameException();
         }
         long getUserStartTime=System.currentTimeMillis();
-        User user=userMapper.getUserByUsername(userVO.getUsername());
+        User user=userMapper2.getUserByUsername(userVO.getUsername());
         statsd.recordExecutionTime("SQLGetUserByUsername",System.currentTimeMillis()-getUserStartTime);
         if(user!=null)
             throw new UserExistException();
@@ -67,10 +76,10 @@ public class UserServiceImpl implements UserService {
         user.setLastName(userVO.getLastName());
         user.setVerified(false);
         long addStartTime=System.currentTimeMillis();
-        userMapper.addUser(user);
+        userMapper1.addUser(user);
         statsd.recordExecutionTime("SQLAddUser",System.currentTimeMillis()-addStartTime);
         long getStartTime=System.currentTimeMillis();
-        user=userMapper.getUserById(uuid);
+        user=userMapper2.getUserById(uuid);
         statsd.recordExecutionTime("SQLGetUserById",System.currentTimeMillis()-getStartTime);
         //generate one-time token and store in the amazon db
             Token token=new Token();
@@ -93,7 +102,7 @@ public class UserServiceImpl implements UserService {
     public void updateUser(UserVO userVO) {
         userVO.setPassword(EncodeUtil.encode(userVO.getPassword()));
         long startTime=System.currentTimeMillis();
-        userMapper.updateUser(userVO);
+        userMapper1.updateUser(userVO);
         statsd.recordExecutionTime("SQLUpdateUser",System.currentTimeMillis()-startTime);
     }
 
@@ -101,7 +110,7 @@ public class UserServiceImpl implements UserService {
     public User getUserSelf(HttpServletRequest request) {
         String username=getUsernameFromRequest(request);
         long startTime=System.currentTimeMillis();
-        User user=userMapper.getUserByUsername(username);
+        User user=userMapper2.getUserByUsername(username);
         statsd.recordExecutionTime("SQLGetUserByUsername",System.currentTimeMillis()-startTime);
         user.setPassword(null);
         return user;
@@ -126,18 +135,18 @@ public class UserServiceImpl implements UserService {
 
         //If the user already have a pic, delete it first and then upload it.
         long getStartTime=System.currentTimeMillis();
-        FileVO verifyFile=fileMapper.getFile(user.getId());
+        FileVO verifyFile=fileMapper2.getFile(user.getId());
         statsd.recordExecutionTime("SQLGetFile",System.currentTimeMillis()-getStartTime);
         if(verifyFile==null) {
             long upload=System.currentTimeMillis();
-            fileMapper.uploadFile(fileVO);
+            fileMapper1.uploadFile(fileVO);
             statsd.recordExecutionTime("SQLUploadFile",System.currentTimeMillis()-upload);
         }
         else {
             deletePic(request);
             fileService.uploadFile(file,user.getId());
             long upload1=System.currentTimeMillis();
-            fileMapper.uploadFile(fileVO);
+            fileMapper1.uploadFile(fileVO);
             statsd.recordExecutionTime("SQLUploadFile",System.currentTimeMillis()-upload1);
         }
         return fileVO;
@@ -155,7 +164,7 @@ public class UserServiceImpl implements UserService {
     public FileVO getPic(HttpServletRequest request){
         User user=getUserSelf(request);
         long startTime=System.currentTimeMillis();
-        FileVO fileVO=fileMapper.getFile(user.getId());
+        FileVO fileVO=fileMapper2.getFile(user.getId());
         statsd.recordExecutionTime("SQLGetFile",System.currentTimeMillis()-startTime);
         return fileVO;
     }
@@ -164,7 +173,7 @@ public class UserServiceImpl implements UserService {
         User user=getUserSelf(request);
         FileVO fileVO=getPic(request);
         long startTime=System.currentTimeMillis();
-        fileMapper.deleteFile(user.getId());
+        fileMapper1.deleteFile(user.getId());
         statsd.recordExecutionTime("SQLDeleteFile",System.currentTimeMillis()-startTime);
         fileService.deleteFile(user.getId()+"/"+fileVO.getFileName());
     }
@@ -173,7 +182,7 @@ public class UserServiceImpl implements UserService {
     public Boolean verifyUserEmail(String username, String token) {
         Token tokenEntity=dynamoDBMapper.load(Token.class,username);
         if(token.equals(tokenEntity.getToken())){
-            userMapper.verifyUser(username);
+            userMapper1.verifyUser(username);
             return true;
         }
         return false;
